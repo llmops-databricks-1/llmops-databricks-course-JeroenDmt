@@ -25,7 +25,9 @@ dependencies = [
     "psycopg==3.3.2",
     "psycopg-pool==3.3.0",
     "psycopg[binary]==3.3.2",
-    "requests==2.32.3"
+    "requests==2.32.3",
+    "lxml==6.0.2",
+    "beautifulsoup4==4.12.3"
 ]
 
 [project.optional-dependencies]

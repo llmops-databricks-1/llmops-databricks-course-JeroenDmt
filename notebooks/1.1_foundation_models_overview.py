@@ -82,7 +82,7 @@ response = client.chat.completions.create(
     model=model_name,
     messages=[
         {"role": "system", "content": "You are a helpful AI assistant."},
-        {"role": "user", "content": "Explain LLMOps in 3 sentences."}
+        {"role": "user", "content": "Explain a use case for working with LLM in Databricks."}
     ],
     max_tokens=200,
      # Temperature ontrols randomness: 0.0 = deterministic, 1.0 = more creative/random
@@ -94,6 +94,7 @@ logger.info(response.choices[0].message.content)
 logger.info(f"Tokens used: {response.usage.total_tokens}")
 logger.info(f"Input tokens: {response.usage.prompt_tokens}")
 logger.info(f"Output tokens: {response.usage.completion_tokens}")
+
 
 # COMMAND ----------
 
