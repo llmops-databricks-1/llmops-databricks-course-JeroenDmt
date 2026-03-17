@@ -3,6 +3,7 @@ bundle:
 
 include:
   - resources/*.yml
+  - project_config.yml
 
 variables:
   git_sha:
@@ -20,5 +21,5 @@ targets:
     mode: development
     default: true
     workspace:
-      host: https://<your-databricks-workspace>
+      host: https://dbc-85b9247a-ab1b.cloud.databricks.com/
       root_path: /Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.name}/${bundle.target}
