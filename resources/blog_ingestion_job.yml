@@ -40,4 +40,3 @@ resources:
               - "dev"
               - "--config-path"
               - "${workspace.root_path}/files/project_config.yml"
-

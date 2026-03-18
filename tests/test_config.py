@@ -2,11 +2,8 @@
 
 import pytest
 
-from llmops_databricks_course_JeroenDmt.config import (
-    EnvName,
-    get_config_path,
-    load_project_config,
-)
+from llmops_databricks_course_JeroenDmt.config import load_project_config
+from llmops_databricks_course_JeroenDmt.config.loader import get_config_path
 
 
 @pytest.fixture
@@ -33,7 +30,10 @@ def test_load_project_config_dev(config_path):
     assert config.blog_html_root == (
         "/Volumes/llmops_dev/databricks_kb/databricks_kb_raw/blog_posts_html"
     )
-    assert config.docs_pdf_root == "/Volumes/llmops_dev/databricks_kb/databricks_kb_raw/docs_pdf"
+    assert (
+        config.docs_pdf_root
+        == "/Volumes/llmops_dev/databricks_kb/databricks_kb_raw/docs_pdf"
+    )
 
 
 def test_load_project_config_uat(config_path):

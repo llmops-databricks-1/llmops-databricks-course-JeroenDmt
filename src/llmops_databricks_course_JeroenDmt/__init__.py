@@ -3,35 +3,36 @@
 __version__ = "0.0.1"
 
 
-def blog_ingestion() -> int:
-    """
-    Entry point for Databricks job: run blog ingestion (config from project_config.yml, Spark from context).
+from pathlib import Path
 
-    Called by the job as module.blog_ingestion(). Job parameters are passed as CLI-style args,
-    e.g. ["--env", "dev"]; we parse --env from sys.argv and default to "dev".
-    """
+from pyspark.sql import SparkSession
+
+
+def _get_spark() -> SparkSession:
+    """Get Spark session from Databricks Connect or from a Databricks job."""
+    try:
+        from databricks.connect import DatabricksSession
+
+        return DatabricksSession.builder.getOrCreate()
+    except Exception:
+        pass
+
+    spark = SparkSession.getActiveSession()
+    if spark is None:
+        raise RuntimeError("No active Spark session found.")
+    return spark
+
+    raise RuntimeError(
+        "No Spark session found. Run with Databricks Connect (local) "
+        "or from a Databricks job."
+    )
+
+
+def _parse_common_args() -> tuple[str, Path | None]:
     import sys
-    from llmops_databricks_course_JeroenDmt.blog_ingestion.write_bronze import run_blog_ingestion
-    from llmops_databricks_course_JeroenDmt.config import load_project_config
-
-    def _get_spark():
-        """Get Spark session from Databricks Connect (local) or from globals (Databricks)."""
-        try:
-            from databricks.connect import DatabricksSession
-            return DatabricksSession.builder.getOrCreate()
-        except Exception:
-            pass
-        try:
-            from pyspark.sql import SparkSession
-            return SparkSession.getActiveSession()
-        except Exception:
-            pass
-        raise RuntimeError(
-            "No Spark session found. Run with Databricks Connect (local) or from a Databricks notebook/job."
-        )
 
     env = "dev"
-    config_path = None
+    config_path: Path | None = None
     argv = getattr(sys, "argv", [])
     i = 0
     while i < len(argv):
@@ -40,13 +41,26 @@ def blog_ingestion() -> int:
             i += 2
             continue
         if argv[i] == "--config-path" and i + 1 < len(argv):
-            from pathlib import Path as _Path
-
-            config_path = _Path(argv[i + 1])
+            config_path = Path(argv[i + 1])
             i += 2
             continue
         i += 1
+    return env, config_path
 
+
+def blog_ingestion() -> int:
+    """
+    Entry point for Databricks job: run Bronze blog ingestion.
+
+    Called by the job as module.blog_ingestion(). Job parameters are passed as CLI-style
+    args.
+    """
+    from llmops_databricks_course_JeroenDmt.blog_ingestion.write_bronze import (
+        run_blog_ingestion,
+    )
+    from llmops_databricks_course_JeroenDmt.config import load_project_config
+
+    env, config_path = _parse_common_args()
     if config_path is not None:
         config = load_project_config(path=config_path, env=env)
     else:
@@ -59,47 +73,12 @@ def blog_ingestion() -> int:
 
 def blog_ingestion_silver() -> int:
     """Silver layer entry point: derive text table from Bronze."""
-    import sys
-    from pathlib import Path as _Path
-
     from llmops_databricks_course_JeroenDmt.blog_ingestion.write_silver import (
         create_silver_blog_posts_table,
     )
     from llmops_databricks_course_JeroenDmt.config import load_project_config
 
-    def _get_spark():
-        """Get Spark session from Databricks Connect (local) or from globals (Databricks)."""
-        try:
-            from databricks.connect import DatabricksSession
-
-            return DatabricksSession.builder.getOrCreate()
-        except Exception:
-            pass
-        try:
-            from pyspark.sql import SparkSession
-
-            return SparkSession.getActiveSession()
-        except Exception:
-            pass
-        raise RuntimeError(
-            "No Spark session found. Run with Databricks Connect (local) or from a Databricks notebook/job."
-        )
-
-    env = "dev"
-    config_path = None
-    argv = getattr(sys, "argv", [])
-    i = 0
-    while i < len(argv):
-        if argv[i] == "--env" and i + 1 < len(argv):
-            env = argv[i + 1]
-            i += 2
-            continue
-        if argv[i] == "--config-path" and i + 1 < len(argv):
-            config_path = _Path(argv[i + 1])
-            i += 2
-            continue
-        i += 1
-
+    env, config_path = _parse_common_args()
     if config_path is not None:
         config = load_project_config(path=config_path, env=env)
     else:
@@ -108,4 +87,3 @@ def blog_ingestion_silver() -> int:
     create_silver_blog_posts_table(spark, config)
     print(f"Refreshed Silver blog posts table for env '{env}'.")
     return 0
-

@@ -1,6 +1,5 @@
 """Load project_config.yml and return config for a single environment."""
 
-import os
 from pathlib import Path
 
 import yaml

@@ -1,7 +1,7 @@
 """Fetch Databricks blog post list from RSS and download article HTML."""
 
 import xml.etree.ElementTree as ET
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 from urllib.parse import urlparse
 
@@ -22,7 +22,7 @@ def _parse_rss_date(date_str: str) -> datetime | None:
                 dt = datetime.strptime(s_naive, "%a, %d %b %Y %H:%M:%S")
             else:
                 dt = datetime.strptime(s, fmt)
-            return dt.replace(tzinfo=timezone.utc)
+            return dt.replace(tzinfo=UTC)
         except ValueError:
             continue
     return None
@@ -74,22 +74,22 @@ def list_recent_posts() -> list[dict[str, Any]]:
         if pub_el is not None and pub_el.text:
             pub_date = _parse_rss_date(pub_el.text)
         if pub_date is None:
-            pub_date = datetime.now(timezone.utc)
+            pub_date = datetime.now(UTC)
 
         categories = [
-            c.text.strip()
-            for c in item
-            if local_tag(c) == "category" and c.text
+            c.text.strip() for c in item if local_tag(c) == "category" and c.text
         ]
 
-        posts.append({
-            "url": link,
-            "post_id": _post_id_from_url(link),
-            "title": title,
-            "published_at": pub_date,
-            "tags": categories,
-            "category": categories[0] if categories else None,
-        })
+        posts.append(
+            {
+                "url": link,
+                "post_id": _post_id_from_url(link),
+                "title": title,
+                "published_at": pub_date,
+                "tags": categories,
+                "category": categories[0] if categories else None,
+            }
+        )
 
     return posts
 

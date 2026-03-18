@@ -1,9 +1,7 @@
 """Tests for blog ingestion (fetch + helpers)."""
 
-from datetime import datetime, timezone
+from datetime import datetime
 from unittest.mock import patch
-
-import pytest
 
 from llmops_databricks_course_JeroenDmt.blog_ingestion.fetch_blog_posts import (
     _post_id_from_url,
@@ -13,7 +11,10 @@ from llmops_databricks_course_JeroenDmt.blog_ingestion.fetch_blog_posts import (
 
 def test_post_id_from_url():
     """post_id is the last path segment of the blog URL."""
-    assert _post_id_from_url("https://www.databricks.com/blog/my-post-title") == "my-post-title"
+    assert (
+        _post_id_from_url("https://www.databricks.com/blog/my-post-title")
+        == "my-post-title"
+    )
     assert _post_id_from_url("https://www.databricks.com/blog/2025/01/slug") == "slug"
     assert _post_id_from_url("https://www.databricks.com/blog/") == "blog"
 

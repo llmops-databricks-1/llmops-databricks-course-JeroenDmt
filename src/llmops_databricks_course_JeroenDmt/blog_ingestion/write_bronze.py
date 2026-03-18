@@ -1,12 +1,13 @@
 """Write blog HTML to UC volume and upsert Bronze rows."""
 
 import io
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.errors import NotFound
 from databricks.sdk.service.catalog import VolumeType
+from pyspark.sql import SparkSession
 
 from llmops_databricks_course_JeroenDmt.config.models import ProjectConfig
 
@@ -22,12 +23,17 @@ def _parse_volume_root(raw_root: str) -> tuple[str, str, str]:
     path = raw_root.lstrip("/")
     parts = path.split("/")
     if len(parts) < 4 or parts[0] != "Volumes":
-        raise ValueError(f"raw_root must start with /Volumes/<catalog>/<schema>/<volume>, got {raw_root!r}")
+        raise ValueError(
+            "raw_root must start with /Volumes/<catalog>/<schema>/<volume>, "
+            f"got {raw_root!r}"
+        )
     _, catalog, schema, volume_name = parts[:4]
     return catalog, schema, volume_name
 
 
-def ensure_catalog_schema_volume(config: ProjectConfig, client: WorkspaceClient | None = None) -> None:
+def ensure_catalog_schema_volume(
+    config: ProjectConfig, client: WorkspaceClient | None = None
+) -> None:
     """
     Ensure that the catalog, schema, and volume for raw_root exist.
 
@@ -83,7 +89,7 @@ def write_html_to_volume(
     if isinstance(published_at, datetime):
         year, month = published_at.year, published_at.month
     else:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         year, month = now.year, now.month
     post_id = post["post_id"]
     dir_path = f"{config.blog_html_root}/{year}/{month:02d}"
@@ -102,7 +108,7 @@ def _bronze_table_full_name(config: ProjectConfig) -> str:
     return f"{config.catalog}.{config.db_schema}.{BRONZE_TABLE_NAME}"
 
 
-def ensure_bronze_table(spark: Any, config: ProjectConfig) -> None:
+def ensure_bronze_table(spark: SparkSession, config: ProjectConfig) -> None:
     """Create the Bronze table if it does not exist (Unity Catalog).
 
     Assumes that the catalog and schema already exist; callers should invoke
@@ -127,7 +133,7 @@ def ensure_bronze_table(spark: Any, config: ProjectConfig) -> None:
 
 
 def upsert_bronze_row(
-    spark: Any,
+    spark: SparkSession,
     config: ProjectConfig,
     post: dict[str, Any],
     path_in_storage: str,
@@ -153,24 +159,23 @@ def upsert_bronze_row(
     category = post.get("category")
     tags = post.get("tags") or []
     published_at = post.get("published_at")
-    if isinstance(published_at, datetime):
-        pub_ts = published_at
-    else:
-        pub_ts = None
-    ingested_at = datetime.now(timezone.utc)
+    pub_ts = published_at if isinstance(published_at, datetime) else None
+    ingested_at = datetime.now(UTC)
     # Cap very large HTML for storage
     html_stored = html[:1_000_000] if len(html) > 1_000_000 else html
 
-    schema = StructType([
-        StructField("url", StringType(), False),
-        StructField("path_in_storage", StringType(), True),
-        StructField("title", StringType(), True),
-        StructField("published_at", TimestampType(), True),
-        StructField("category", StringType(), True),
-        StructField("tags", ArrayType(StringType()), True),
-        StructField("raw_html", StringType(), True),
-        StructField("ingested_at", TimestampType(), False),
-    ])
+    schema = StructType(
+        [
+            StructField("url", StringType(), False),
+            StructField("path_in_storage", StringType(), True),
+            StructField("title", StringType(), True),
+            StructField("published_at", TimestampType(), True),
+            StructField("category", StringType(), True),
+            StructField("tags", ArrayType(StringType()), True),
+            StructField("raw_html", StringType(), True),
+            StructField("ingested_at", TimestampType(), False),
+        ]
+    )
     row = Row(
         url=url,
         path_in_storage=path_in_storage,
@@ -203,7 +208,7 @@ def upsert_bronze_row(
 
 
 def run_blog_ingestion(
-    spark: Any,
+    spark: SparkSession,
     config: ProjectConfig,
     *,
     client: WorkspaceClient | None = None,

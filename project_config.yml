@@ -24,4 +24,3 @@ prd:
     blog_html_subdir: "blog_posts_html"
     docs_pdf_subdir: "docs_pdf"
     platform_release_notes_subdir: "platform_release_notes_html"
-

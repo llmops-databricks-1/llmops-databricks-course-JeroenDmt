@@ -2,13 +2,16 @@
 
 from typing import Literal
 
-from pydantic import BaseModel, computed_field, Field
+from pydantic import BaseModel, Field, computed_field
 
 EnvName = Literal["dev", "uat", "prd"]
 
 
 class ProjectConfig(BaseModel):
-    """Environment-specific project configuration (catalog, schema, volumes, ingestion)."""
+    """Environment-specific project configuration.
+
+    Includes catalog/schema and volume subdirectories.
+    """
 
     catalog: str
     db_schema: str = Field(alias="schema")
