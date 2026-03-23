@@ -3,7 +3,10 @@ bundle:
 
 include:
   - resources/*.yml
-  - project_config.yml
+
+sync:
+  include:
+    - project_config.yml
 
 variables:
   git_sha:

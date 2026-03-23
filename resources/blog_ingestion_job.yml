@@ -40,3 +40,31 @@ resources:
               - "dev"
               - "--config-path"
               - "${workspace.root_path}/files/project_config.yml"
+
+        - task_key: blog_ingestion_silver_chunks
+          description: "Build Silver blog_post_chunks table from Bronze HTML"
+          environment_key: default
+          depends_on:
+            - task_key: blog_ingestion_silver
+          python_wheel_task:
+            package_name: llmops_databricks_course_JeroenDmt
+            entry_point: blog_ingestion_silver_chunks
+            parameters:
+              - "--env"
+              - "dev"
+              - "--config-path"
+              - "${workspace.root_path}/files/project_config.yml"
+
+        - task_key: blog_ingestion_vector_index
+          description: "Create or sync Vector Search index from Silver chunks"
+          environment_key: default
+          depends_on:
+            - task_key: blog_ingestion_silver_chunks
+          python_wheel_task:
+            package_name: llmops_databricks_course_JeroenDmt
+            entry_point: blog_ingestion_vector_index
+            parameters:
+              - "--env"
+              - "dev"
+              - "--config-path"
+              - "${workspace.root_path}/files/project_config.yml"

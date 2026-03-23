@@ -22,11 +22,6 @@ def _get_spark() -> SparkSession:
         raise RuntimeError("No active Spark session found.")
     return spark
 
-    raise RuntimeError(
-        "No Spark session found. Run with Databricks Connect (local) "
-        "or from a Databricks job."
-    )
-
 
 def _parse_common_args() -> tuple[str, Path | None]:
     import sys
@@ -86,4 +81,46 @@ def blog_ingestion_silver() -> int:
     spark = _get_spark()
     create_silver_blog_posts_table(spark, config)
     print(f"Refreshed Silver blog posts table for env '{env}'.")
+    return 0
+
+
+def blog_ingestion_silver_chunks() -> int:
+    """Silver layer entry point: derive chunk table from Bronze."""
+    from llmops_databricks_course_JeroenDmt.blog_ingestion.write_silver import (
+        create_silver_blog_post_chunks_table,
+    )
+    from llmops_databricks_course_JeroenDmt.config import load_project_config
+
+    env, config_path = _parse_common_args()
+    if config_path is not None:
+        config = load_project_config(path=config_path, env=env)
+    else:
+        config = load_project_config(env=env)
+    spark = _get_spark()
+    n_chunks = create_silver_blog_post_chunks_table(spark, config)
+    print(f"Refreshed Silver blog post chunks ({n_chunks}) for env '{env}'.")
+    return 0
+
+
+def blog_ingestion_vector_index() -> int:
+    """Vector Search entry point: create/sync index from Silver chunks."""
+    from llmops_databricks_course_JeroenDmt.config import load_project_config
+    from llmops_databricks_course_JeroenDmt.vector_search.vector_search import (
+        EMBEDDING_MODEL_ENDPOINT_NAME,
+        ensure_and_sync_chunks_index,
+    )
+
+    env, config_path = _parse_common_args()
+    if config_path is not None:
+        config = load_project_config(path=config_path, env=env)
+    else:
+        config = load_project_config(env=env)
+
+    endpoint_name, index_name, created_now = ensure_and_sync_chunks_index(config)
+    action = "Created and synced" if created_now else "Synced"
+    print(
+        f"{action} Vector Search index '{index_name}' on endpoint "
+        f"'{endpoint_name}' using embeddings "
+        f"'{EMBEDDING_MODEL_ENDPOINT_NAME}' for env '{env}'."
+    )
     return 0
