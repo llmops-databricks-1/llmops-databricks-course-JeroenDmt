@@ -95,3 +95,11 @@ dmypy.json
 # VS code configuration
 .vscode
 .history
+
+# Cursor configuration
+__builtins__.pyi
+.cursor
+
+
+# AI Dev kit
+.ai-dev-kit/

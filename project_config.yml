@@ -1,0 +1,26 @@
+dev:
+  catalog: "llmops_dev"
+  schema: "databricks_kb"
+  volumes:
+    raw_root: "/Volumes/llmops_dev/databricks_kb/databricks_kb_raw"
+    blog_html_subdir: "blog_posts_html"
+    docs_pdf_subdir: "docs_pdf"
+    platform_release_notes_subdir: "platform_release_notes_html"
+
+uat:
+  catalog: "llmops_uat"
+  schema: "databricks_kb"
+  volumes:
+    raw_root: "/Volumes/llmops_uat/databricks_kb/databricks_kb_raw"
+    blog_html_subdir: "blog_posts_html"
+    docs_pdf_subdir: "docs_pdf"
+    platform_release_notes_subdir: "platform_release_notes_html"
+
+prd:
+  catalog: "llmops_prd"
+  schema: "databricks_kb"
+  volumes:
+    raw_root: "/Volumes/llmops_prd/databricks_kb/databricks_kb_raw"
+    blog_html_subdir: "blog_posts_html"
+    docs_pdf_subdir: "docs_pdf"
+    platform_release_notes_subdir: "platform_release_notes_html"

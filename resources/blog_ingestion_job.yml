@@ -1,0 +1,42 @@
+resources:
+  jobs:
+    blog_ingestion_job:
+      name: "llmops-blog-ingestion-${bundle.target}"
+      tags:
+        project_name: "llmops-databricks-course-JeroenDmt"
+      schedule:
+        quartz_cron_expression: "0 0 6 * * ?"
+        timezone_id: "UTC"
+        pause_status: UNPAUSED
+      environments:
+        - environment_key: default
+          spec:
+            environment_version: "4"
+            dependencies:
+              - ../dist/*.whl
+      tasks:
+        - task_key: blog_ingestion_bronze
+          description: "Ingest Databricks blog posts into Bronze using project_config.yml"
+          environment_key: default
+          python_wheel_task:
+            package_name: llmops_databricks_course_JeroenDmt
+            entry_point: blog_ingestion
+            parameters:
+              - "--env"
+              - "dev"
+              - "--config-path"
+              - "${workspace.root_path}/files/project_config.yml"
+
+        - task_key: blog_ingestion_silver
+          description: "Build Silver blog_posts table (text) from Bronze"
+          environment_key: default
+          depends_on:
+            - task_key: blog_ingestion_bronze
+          python_wheel_task:
+            package_name: llmops_databricks_course_JeroenDmt
+            entry_point: blog_ingestion_silver
+            parameters:
+              - "--env"
+              - "dev"
+              - "--config-path"
+              - "${workspace.root_path}/files/project_config.yml"
