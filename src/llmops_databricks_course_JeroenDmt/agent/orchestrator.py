@@ -22,4 +22,3 @@ def answer_question(config: ProjectConfig, query: str) -> dict[str, Any]:
         "sources": result["sources"],
         "num_docs": len(docs),
     }
-

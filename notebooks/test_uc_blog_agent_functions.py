@@ -69,7 +69,7 @@ FROM vector_search(
   query => query,
   num_results => 25
 ) AS v
-WHERE 
+WHERE
   (start_date IS NULL OR CAST(v.published_at AS DATE) >= start_date)
   AND (end_date IS NULL OR CAST(v.published_at AS DATE) <= end_date)
 """

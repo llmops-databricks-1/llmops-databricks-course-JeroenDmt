@@ -76,4 +76,3 @@ def test_answer_question_empty_results_graceful() -> None:
     assert "could not find any relevant blog posts" in result["answer"]
     assert result["sources"] == []
     assert result["num_docs"] == 0
-

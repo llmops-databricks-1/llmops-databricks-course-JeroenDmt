@@ -3,14 +3,16 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any
+from typing import Any, Protocol
 
 from databricks.vector_search.client import VectorSearchClient
 from openai import OpenAI
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
 
-from llmops_databricks_course_JeroenDmt.blog_ingestion.write_silver import SILVER_TABLE_NAME
+from llmops_databricks_course_JeroenDmt.blog_ingestion.write_silver import (
+    SILVER_TABLE_NAME,
+)
 from llmops_databricks_course_JeroenDmt.config.models import ProjectConfig
 from llmops_databricks_course_JeroenDmt.vector_search.vector_search import (
     VECTOR_SEARCH_ENDPOINT_NAME,
@@ -24,7 +26,18 @@ def _parse_date(date_str: str | None) -> datetime | None:
     return datetime.fromisoformat(date_str)
 
 
-def _get_index(config: ProjectConfig) -> Any:
+class _VectorSearchIndex(Protocol):
+    def similarity_search(
+        self,
+        *,
+        columns: list[str],
+        query_text: str,
+        filters: dict[str, Any] | None,
+        num_results: int,
+    ) -> dict[str, Any]: ...
+
+
+def _get_index(config: ProjectConfig) -> _VectorSearchIndex:
     client = VectorSearchClient(disable_notice=True)
     index_name = _index_name(config)
     endpoint_name = VECTOR_SEARCH_ENDPOINT_NAME
@@ -203,4 +216,3 @@ def summarize_documents(
     sources = [p["url"] for p in posts if p.get("url")]
     summary = "Overview of relevant blog posts:\n" + "\n\n".join(bullets)
     return {"summary": summary, "sources": sources}
-
