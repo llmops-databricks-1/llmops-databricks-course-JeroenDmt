@@ -124,3 +124,43 @@ def blog_ingestion_vector_index() -> int:
         f"'{EMBEDDING_MODEL_ENDPOINT_NAME}' for env '{env}'."
     )
     return 0
+
+
+def blog_agent_answer() -> int:
+    """Entry point: answer a blog question using the Vector Search index."""
+    import sys
+
+    from llmops_databricks_course_JeroenDmt.agent.orchestrator import answer_question
+    from llmops_databricks_course_JeroenDmt.config import load_project_config
+
+    env, config_path = _parse_common_args()
+    # Remaining arguments after known flags form the query string.
+    argv = getattr(sys, "argv", [])
+    query_parts: list[str] = []
+    i = 0
+    while i < len(argv):
+        if argv[i] in {"--env", "--config-path"} and i + 1 < len(argv):
+            i += 2
+            continue
+        if argv[i].endswith("blog_agent_answer"):
+            i += 1
+            continue
+        query_parts.append(argv[i])
+        i += 1
+    query = " ".join(p for p in query_parts if not p.startswith("-")).strip()
+    if not query:
+        print("No query provided for blog_agent_answer.")
+        return 1
+
+    if config_path is not None:
+        config = load_project_config(path=config_path, env=env)
+    else:
+        config = load_project_config(env=env)
+
+    result = answer_question(config, query)
+    print(result["answer"])
+    if result["sources"]:
+        print("\nSources:")
+        for url in result["sources"]:
+            print(f"- {url}")
+    return 0
